@@ -9,3 +9,5 @@
   This repo aims to follow the design of agda-categories, with a few differences:
   - We should aim to use predicate versions of limits, rather than packing
     up the parameters in the records.
+* Style Guide
+  - Use ~𝒞, 𝒟, ℰ~ for Categories.
