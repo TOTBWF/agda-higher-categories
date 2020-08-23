@@ -1,4 +1,4 @@
 name: agda-higher-categories
-include: .
+include: src/
 depend: standard-library
 	agda-categories
