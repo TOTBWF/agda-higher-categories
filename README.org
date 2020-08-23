@@ -1,0 +1,11 @@
+* Higher Categories in Agda
+  This repo is a playground for experimenting with some ideas from
+  higer category theory, building off the work in done [[https://github.com/agda/agda-categories][agda-categories]].
+  There also might be some bits and bobs that could be upstreamed.
+
+* Goals
+  - [ ] T-MultiCategories from [[https://arxiv.org/abs/math/0305049][Higher Categories, Higher Operads]]
+* Design Notes
+  This repo aims to follow the design of agda-categories, with a few differences:
+  - We should aim to use predicate versions of limits, rather than packing
+    up the parameters in the records.
