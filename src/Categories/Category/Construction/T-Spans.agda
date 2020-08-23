@@ -2,11 +2,10 @@
 
 open import Categories.Category
 open import Categories.Monad
-open import Categories.Monad.Cartesian
 
 -- The bicategory of T-Spans, defined on page 108 of https://arxiv.org/abs/math/0305049
 -- Also see https://ncatlab.org/nlab/show/multicategory
-module Categories.Bicategory.Instance.T-Spans {o ℓ e} {ℰ : Category o ℓ e} {T : Monad ℰ} (T-cartesian : CartesianMonad T) where
+module Categories.Category.Construction.T-Spans {o ℓ e} {ℰ : Category o ℓ e} (T : Monad ℰ) where
 
 open import Level
 open import Categories.Morphism.Reasoning ℰ
