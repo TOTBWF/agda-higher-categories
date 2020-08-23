@@ -3,7 +3,7 @@
 open import Categories.Category
 open import Categories.Monad
 
--- The bicategory of T-Spans, defined on page 108 of https://arxiv.org/abs/math/0305049
+-- The 1-category of T-Spans, defined on page 108 of https://arxiv.org/abs/math/0305049
 -- Also see https://ncatlab.org/nlab/show/multicategory
 module Categories.Category.Construction.T-Spans {o ℓ e} {ℰ : Category o ℓ e} (T : Monad ℰ) where
 
