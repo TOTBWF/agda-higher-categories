@@ -8,14 +8,17 @@ open import Categories.Monad.Cartesian
 module Categories.Bicategory.Construction.T-Spans {o ℓ e} {ℰ : Category o ℓ e} {T : Monad ℰ} (T-cartesian : CartesianMonad T) where
 
 open import Level
+open import Function using (_$_)
 open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂; uncurry)
 open import Categories.Category.Product
 open import Categories.Bicategory
 open import Categories.Functor renaming (id to idF)
-open import Categories.Diagram.Pullback as Pullback
+open import Categories.Diagram.Pullback ℰ as Pullback
+open import Categories.Diagram.IsPullback ℰ as IsPullback
 
 open import Categories.Category.Construction.T-Spans T renaming (T-Spans to T-Spans₁)
 
+open import Categories.Morphism ℰ
 open import Categories.Morphism.Reasoning ℰ
 
 private
@@ -71,7 +74,7 @@ T-Spans = record
 
     _⊚₀_ : T-Span Y Z → T-Span X Y → T-Span X Z
     _⊚₀_ {X = X} f g = 
-      let pullback : Pullback ℰ (T₁ (cod g)) (dom f)
+      let pullback : Pullback (T₁ (cod g)) (dom f)
           pullback = has-pullbacks (T₁ (cod g)) (dom f)
       in record
         { M = Pullback.P pullback
@@ -81,10 +84,7 @@ T-Spans = record
 
     _⊚₁_ : ∀ {f f′ : T-Span Y Z} → {g g′ : T-Span X Y} → (α : T-Span⇒ f f′) → (β : T-Span⇒ g g′) → T-Span⇒ (f ⊚₀ g) (f′ ⊚₀ g′)
     _⊚₁_  {X = X} {f} {f′} {g} {g′} α β = 
-      let pullback : Pullback ℰ (T₁ (cod g)) (dom f)
-          pullback = has-pullbacks (T₁ (cod g)) (dom f)
-
-          pullback′ : Pullback ℰ (T₁ (cod g′)) (dom f′)
+      let pullback = has-pullbacks (T₁ (cod g)) (dom f)
           pullback′ = has-pullbacks (T₁ (cod g′)) (dom f′)
 
           chase : T₁ (cod g′) ∘ T₁ (arr β) ∘ Pullback.p₁ pullback ≈ dom f′ ∘ arr α ∘ Pullback.p₂ pullback
@@ -150,3 +150,22 @@ T-Spans = record
       ; homomorphism = λ {(f , g)} {(f′ , g′)} {(f″ , g″)} {(α , β)} {(α′ , β′)} → ⊚₁-homomorphism α α′ β β′
       ; F-resp-≈ = λ {(f , g)} {(f′ , g′)} {(α , β)} {(α′ , β′)} (α-eq , β-eq) → ⊚₁-resp-≈ α α′ β β′ α-eq β-eq
       }
+
+    span-∘-unitˡ : ∀ {E E′ : ℰ.Obj} → (f : T-Span E E′) → T-Span⇒ (id-span ⊚₀ f) f
+    span-∘-unitˡ {E} {E′} f =
+      let pullback = has-pullbacks (T₁ (cod f)) (T.η.η E′)
+          pullback-η = Pullback.swap (IsPullback⇒Pullback (cartesian-η (cod f)))
+          pullback-iso = Pullback.up-to-iso pullback pullback-η
+          open _≅_
+      in record
+        { arr = from pullback-iso
+        ; commute-dom = ⟺ $ switch-tofromʳ pullback-iso $ begin
+          (T.μ.η E ∘ T₁ (dom f) ∘ Pullback.p₁ pullback) ∘ Pullback.universal pullback _ ≈⟨ pull-last (Pullback.p₁∘universal≈h₁ pullback) ⟩
+          T.μ.η E ∘ T₁ (dom f) ∘ T.η.η (M f) ≈⟨ refl⟩∘⟨ T.η.sym-commute (dom f) ⟩
+          T.μ.η E ∘ T.η.η (T₀ E) ∘ dom f ≈⟨ cancelˡ T.identityʳ ⟩
+          dom f ∎
+        ; commute-cod = ⟺ $ switch-tofromʳ pullback-iso $ begin
+          (id ∘ Pullback.p₂ pullback) ∘ Pullback.universal pullback _ ≈⟨ pullʳ (Pullback.p₂∘universal≈h₂ pullback) ⟩
+          id ∘ cod f ≈⟨ identityˡ ⟩
+          cod f ∎
+        }
