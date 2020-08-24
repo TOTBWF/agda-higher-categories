@@ -13,6 +13,7 @@ open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂; uncurry)
 open import Categories.Category.Product
 open import Categories.Bicategory
 open import Categories.Functor renaming (id to idF)
+open import Categories.NaturalTransformation.NaturalIsomorphism hiding (refl; sym)
 open import Categories.Diagram.Pullback ℰ as Pullback
 open import Categories.Diagram.IsPullback ℰ as IsPullback
 
@@ -51,7 +52,12 @@ T-Spans = record
              }
     ; ⊚ = span-∘
     ; ⊚-assoc = {!!}
-    ; unitˡ = {!!}
+    ; unitˡ = niHelper record
+      { η = λ (_ , f) → span-∘-unitˡ f
+      ; η⁻¹ = λ (_ , f) → span-∘-unitˡ⁻¹ f
+      ; commute = λ (_ , α) → span-∘-unitˡ-commute α
+      ; iso = {!!}
+      }
     ; unitʳ = {!!}
     }
   ; triangle = {!!}
@@ -151,21 +157,55 @@ T-Spans = record
       ; F-resp-≈ = λ {(f , g)} {(f′ , g′)} {(α , β)} {(α′ , β′)} (α-eq , β-eq) → ⊚₁-resp-≈ α α′ β β′ α-eq β-eq
       }
 
-    span-∘-unitˡ : ∀ {E E′ : ℰ.Obj} → (f : T-Span E E′) → T-Span⇒ (id-span ⊚₀ f) f
-    span-∘-unitˡ {E} {E′} f =
-      let pullback = has-pullbacks (T₁ (cod f)) (T.η.η E′)
+    -- FIXME: I should pull these commutativity proofs out...
+    span-∘-unitˡ : ∀ (f : T-Span X Y) → T-Span⇒ (id-span ⊚₀ f) f
+    span-∘-unitˡ {X = X} {Y = Y} f =
+      let pullback = has-pullbacks (T₁ (cod f)) (T.η.η Y)
           pullback-η = Pullback.swap (IsPullback⇒Pullback (cartesian-η (cod f)))
           pullback-iso = Pullback.up-to-iso pullback pullback-η
           open _≅_
       in record
         { arr = from pullback-iso
         ; commute-dom = ⟺ $ switch-tofromʳ pullback-iso $ begin
-          (T.μ.η E ∘ T₁ (dom f) ∘ Pullback.p₁ pullback) ∘ Pullback.universal pullback _ ≈⟨ pull-last (Pullback.p₁∘universal≈h₁ pullback) ⟩
-          T.μ.η E ∘ T₁ (dom f) ∘ T.η.η (M f) ≈⟨ refl⟩∘⟨ T.η.sym-commute (dom f) ⟩
-          T.μ.η E ∘ T.η.η (T₀ E) ∘ dom f ≈⟨ cancelˡ T.identityʳ ⟩
+          (T.μ.η X ∘ T₁ (dom f) ∘ Pullback.p₁ pullback) ∘ Pullback.universal pullback _ ≈⟨ pull-last (Pullback.p₁∘universal≈h₁ pullback) ⟩
+          T.μ.η X ∘ T₁ (dom f) ∘ T.η.η (M f) ≈⟨ refl⟩∘⟨ T.η.sym-commute (dom f) ⟩
+          T.μ.η X ∘ T.η.η (T₀ X) ∘ dom f ≈⟨ cancelˡ T.identityʳ ⟩
           dom f ∎
         ; commute-cod = ⟺ $ switch-tofromʳ pullback-iso $ begin
           (id ∘ Pullback.p₂ pullback) ∘ Pullback.universal pullback _ ≈⟨ pullʳ (Pullback.p₂∘universal≈h₂ pullback) ⟩
           id ∘ cod f ≈⟨ identityˡ ⟩
           cod f ∎
         }
+
+    span-∘-unitˡ⁻¹ : ∀ (f : T-Span X Y) → T-Span⇒ f (id-span ⊚₀ f)
+    span-∘-unitˡ⁻¹ {X = X} {Y = Y} f =
+      let pullback = has-pullbacks (T₁ (cod f)) (T.η.η Y)
+          pullback-η = Pullback.swap (IsPullback⇒Pullback (cartesian-η (cod f)))
+          pullback-iso = Pullback.up-to-iso pullback pullback-η
+          open _≅_
+      in record
+        { arr = to pullback-iso
+        ; commute-dom = begin
+          (T.μ.η X ∘ T₁ (dom f) ∘ Pullback.p₁ pullback) ∘ Pullback.universal pullback _ ≈⟨ pull-last (Pullback.p₁∘universal≈h₁ pullback) ⟩
+          T.μ.η X ∘ T₁ (dom f) ∘ T.η.η (M f) ≈⟨ refl⟩∘⟨ T.η.sym-commute (dom f) ⟩
+          T.μ.η X ∘ T.η.η (T₀ X) ∘ dom f ≈⟨ cancelˡ T.identityʳ ⟩
+          dom f ∎
+        ; commute-cod = begin
+          (id ∘ Pullback.p₂ pullback) ∘ Pullback.universal pullback _ ≈⟨ pullʳ (Pullback.p₂∘universal≈h₂ pullback) ⟩
+          id ∘ cod f ≈⟨ identityˡ ⟩
+          cod f ∎
+        }
+
+    span-∘-unitˡ-commute : ∀ {f f′ : T-Span X Y} (α : T-Span⇒ f f′) → T-Spans₁ X Y [ T-Spans₁ X Y [ span-∘-unitˡ f′ ∘ id-span⇒ ⊚₁ α ] ≈ T-Spans₁ X Y [ α ∘ span-∘-unitˡ f ] ]
+    span-∘-unitˡ-commute {X = X} {Y = Y} {f = f} {f′ = f′} α =
+      let pullback = has-pullbacks (T₁ (cod f)) (T.η.η Y)
+          pullback′ = has-pullbacks (T₁ (cod f′)) (T.η.η Y)
+          pullback-η = Pullback.swap (IsPullback⇒Pullback (cartesian-η (cod f)))
+          pullback-η′ = Pullback.swap (IsPullback⇒Pullback (cartesian-η (cod f′)))
+          pullback-iso = Pullback.up-to-iso pullback pullback-η
+          pullback-iso′ = Pullback.up-to-iso pullback′ pullback-η′
+          open _≅_
+      in begin
+        from pullback-iso′ ∘ Pullback.universal pullback′ _ ≈⟨ {!!} ⟩
+        arr α ∘ from pullback-iso ∎
+
